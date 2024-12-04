@@ -7,4 +7,5 @@ The normal V-shaped base works well for most drawing implements, but I wanted so
 
 I designed the band holders to swap in and out while still attached to the machine. The writing tool holders are meant to slide up slightly to allow for pressure without breaking the writing tool.
 
-I use a version of the parametric clamp listed here https://www.thingiverse.com/thing:31982#google_vignette
+I use a version of the parametric clamp scad: https://www.thingiverse.com/thing:31982#google_vignette
+I also use a version of the BOSL2 toolset: https://github.com/BelfrySCAD/BOSL2
