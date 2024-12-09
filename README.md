@@ -5,7 +5,8 @@ This is inspired by the Shapeoko Quick Draw CNC Pen Holder https://shop.carbide3
 
 The normal V-shaped base works well for most drawing implements, but I wanted something that would allow custom attachments for angled drawing tools to still be vertically aligned. In theory, this should also allow for uniformity in the centerpoint of multiple writing tools. This means you should be able to swap out writing tools between parts of your drawing, even if the drawing tools are of different types or manufacturers.
 
-I designed the band holders to swap in and out while still attached to the machine. The writing tool holders are meant to slide up slightly to allow for pressure without breaking the writing tool.
+I designed the band holders to swap in and out while still attached to the machine. The writing tool holders are meant to slide up slightly to allow for pressure without breaking the writing tool. You should be able to snap writing tools into the specific pen holders and they'll hold them well enough to allow you to attach the rubber bands.
 
-I use a version of the parametric clamp scad: https://www.thingiverse.com/thing:31982#google_vignette
+I use a version of the parametric clamp scad: https://www.thingiverse.com/thing:31982#google_vignette. I simply added the ability to rotate the base relative to the screws to make access easier on the shapeoko.
+
 I also use a version of the BOSL2 toolset: https://github.com/BelfrySCAD/BOSL2

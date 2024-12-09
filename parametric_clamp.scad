@@ -23,7 +23,9 @@ translate([-25, 0, -25]) clamp(screw_count = 2);
 translate([25, 0, -25]) clamp(height = 25);
 */
 
-module clamp(base = true, base_thickness = 2, base_width = 20, ring_thickness = 2, ring_inner_dia = 35, jaws_thickness = 5, jaws_width = 7, break_width = 5, screw_diameter = 3, screw_count = 1, nut_recess = true, nut_diameter = 6.5, nut_thickness = 3, height = 15) {
+module clamp(base = true, base_thickness = 2, base_width = 20, base_angle=0, ring_thickness = 2,
+			 ring_inner_dia = 35, jaws_thickness = 5, jaws_width = 7, break_width = 5, 
+			 screw_diameter = 3, screw_count = 1, nut_recess = true, nut_diameter = 6.5, nut_thickness = 3, height = 15) {
 
 	//Check base thickness
 	if(base && base_thickness < ring_thickness)
@@ -41,8 +43,9 @@ module clamp(base = true, base_thickness = 2, base_width = 20, ring_thickness = 
 
 	//Base
 	if(base)
-		translate([ring_inner_rad + (base_thickness / 2), 0, 0])
-			cube([base_thickness, base_width, height], center=true);
+		rotate([0,0,base_angle])
+			translate([ring_inner_rad + (base_thickness / 2), 0, 0])
+				cube([base_thickness, base_width, height], center=true);
 
 
 	difference() {
