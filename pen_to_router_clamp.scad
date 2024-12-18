@@ -1,5 +1,6 @@
 include <BOSL2/std.scad>
 include <parametric_clamp.scad>
+include <mirror_copy.scad>
 
 $fn=120;
 // clamp parameters
@@ -7,10 +8,10 @@ ring_inner_dia = 65;
 clamp_height = 35;
 fudge = 0.01;
 base_width = 20;
-base_depth = 20;
+base_depth = 24;
 support_width = 5;
 support_thickness = 6;
-hook_stop_starting_depth = 3;
+hook_stop_starting_depth = 7;
 triangle_size = 1.0+0.2+fudge;
 
 // parameters for pen holder
@@ -30,13 +31,18 @@ pencil_diameter = [8, 8];// #2 pencil
 pentel_diameter = [9.75, 9.75];// pentel
 sharpie_diameter = [10.3, 11.15];//[10.5, 11.25] //fine point sharpie
 
+band_holder_thickness = 3;
 
 module pen_clamp() {
     band_support_depth = base_width*0.4;
+    band_holder_thickness = 3;
+    band_holder_hook_width = support_width/2;
+    bhs = [band_holder_thickness*3.5, band_holder_thickness];
     difference() {
         union() {
             // clamp
             translate([0, 0, clamp_height/2.0]) 
+                rotate([0,180,0])
                 clamp(ring_inner_dia=ring_inner_dia, 
                         height = clamp_height, 
                         base_thickness=base_depth, 
@@ -48,7 +54,7 @@ module pen_clamp() {
                         jaws_width = 15, 
                         jaws_thickness=8);
             // band holder supports
-            translate([0,-ring_inner_dia/2.0-band_support_depth, clamp_height/2.0])
+            translate([0,-ring_inner_dia/2.0-band_support_depth, clamp_height/2.0]) {
                 difference()
                 {
                     union() {
@@ -71,17 +77,34 @@ module pen_clamp() {
                     }
                     // indents for hooking hooks
                     color("blue") {
-                        translate([base_width/2.0+triangle_size*sin(60), 0, 0])
+                        translate([base_width/2.0+triangle_size*sin(60), -hook_stop_starting_depth+support_thickness/2.0, 0])
                             rotate([0, 0, -90])
                                 translate([triangle_size*sin(30)-fudge, 0, 0])
                                     cylinder(r=triangle_size, h=clamp_height+fudge*2, center=true, $fn=3);
-                        scale([-1, 1, 1])
-                            translate([base_width/2.0+triangle_size*sin(60), 0, 0])
-                                rotate([0, 0, -90])
-                                    translate([triangle_size*sin(30)-fudge, 0, 0])
-                                        cylinder(r=triangle_size, h=clamp_height+fudge*2, center=true, $fn=3);
+                        // translate([-(base_width/2.0+support_width), 0, 0])
+                        //     cube([support_width*2,2,clamp_height+fudge*2], center=true);
                     }
                 }
+                // hooks
+                shift_dist = support_width;
+                translate([-base_width/2.0, -hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0, -(clamp_height/4.0-band_holder_thickness)])
+                    rotate([-90,0,90])
+                        prismoid(size1=bhs, size2=bhs, rounding=1, shift=[0,-shift_dist], h=band_holder_thickness+0.01);
+                translate([-base_width/2.0, -hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0, clamp_height/4.0-band_holder_thickness])
+                    rotate([-90,0,90])
+                        prismoid(size1=bhs, size2=bhs, rounding=1, shift=[0,-shift_dist], h=band_holder_thickness+0.01);
+                // triangle alignment hooks
+                translate([base_width/2.0, (-hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0), -(clamp_height/4.0-band_holder_thickness)])
+                    translate([bhs[1]*0.25-fit_dist, 0, 0]) rotate([0,0,90]) rotate([90,0,0])
+                        ymirror(copy=true)
+                            translate([0, bhs[1]/2.0, 0])
+                                wedge([bhs[0], bhs[1], bhs[1]], anchor="BACK", center=true);
+                translate([base_width/2.0, (-hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0), clamp_height/4.0-band_holder_thickness])
+                    translate([bhs[1]*0.25-fit_dist, 0, 0]) rotate([0,0,90]) rotate([90,0,0])
+                        ymirror(copy=true)
+                            translate([0, bhs[1]/2.0, 0])
+                                wedge([bhs[0], bhs[1], bhs[1]], anchor="BACK", center=true);
+            }
         }
         // cutout inset for grips
         color("blue")  {
@@ -104,6 +127,55 @@ module pen_clamp() {
 }
 
 
+module band_holder_wrappable() {
+    base_width = 20;
+    support_width = 5;
+    support_depth = 7;
+    support_thickness = 6;
+    hook_stop_starting_depth = 3;
+    triangle_size = 1.0+fudge;
+
+    band_holder_thickness = 3;
+    band_holder_hook_width = support_width/2;
+    bhs = [support_depth*3+fit_dist*2, band_holder_thickness+fit_dist*2];
+
+    color("blue") 
+    {
+        union() {
+            // support - hook stop
+            translate([-band_holder_thickness/2.0, base_width/2.0+support_width, 0]) {
+                diff() {
+                cuboid([band_holder_thickness, support_width*2, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                translate([band_holder_thickness/2.0-support_depth*0.75, -support_width+band_holder_thickness/2.0, 0]) 
+                    rotate([0,0,90])
+                        {
+                            cuboid([band_holder_thickness, support_depth*1.5, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                            rotate([0,180,0]) tag("remove") {
+                                // hooks
+                                shift_dist = support_width;
+                                translate([-band_holder_thickness/2.0, -hook_stop_starting_depth, -(clamp_height/4.0-band_holder_thickness)])
+                                    rotate([-90,0,-90])
+                                        prismoid(size1=bhs, size2=bhs, rounding=1, shift=[0,-shift_dist], h=band_holder_thickness+0.01);
+                                translate([-band_holder_thickness/2.0, -hook_stop_starting_depth, clamp_height/4.0-band_holder_thickness])
+                                    rotate([-90,0,-90])
+                                        prismoid(size1=bhs, size2=bhs, rounding=1, shift=[0,-shift_dist], h=band_holder_thickness+0.01);
+                            }
+                        }
+                }
+                translate([band_holder_thickness/2.0-support_depth/1.5, support_width-band_holder_thickness/2.0, 0]) {
+                    for (i = [0:3])
+                        translate([0,0,-clamp_height*0.4+clamp_height*0.26*i]) {
+                            translate([-support_depth/1.5, 0, 0]) 
+                                cuboid([band_holder_thickness, support_width, clamp_height/6], rounding=1, edges = ["X", "Y", "Z"]);
+                            rotate([0,0,90])
+                                cuboid([band_holder_thickness, support_depth*1.2, clamp_height/6], rounding=1, edges = ["X", "Y", "Z"]);
+                        }
+                }
+            }
+        }
+    }
+}
+
 module band_holder() {
     base_width = 20;
     support_width = 5;
@@ -112,40 +184,59 @@ module band_holder() {
     hook_stop_starting_depth = 3;
     triangle_size = 1.0+fudge;
 
-    translate([ring_inner_dia/2.0+base_width/2, 0, clamp_height/2.0])
-        color("blue") 
+    band_holder_thickness = 3;
+    band_holder_hook_width = support_width/2;
+    bhs = [band_holder_thickness*5.5, band_holder_thickness];
+
+        color("blue") difference() 
         {
+            //translate([ring_inner_dia/2.0+base_width/2, 0, clamp_height/2.0])
             union() {
-                // support - hook stop
-                band_holder_thickness = 3;
-                translate([-band_holder_thickness/2.0, base_width/2.0+band_holder_thickness/2.0, 0])
-                    cube([band_holder_thickness, band_holder_thickness, clamp_height], center=true);
-                translate([-band_holder_thickness/2.0, base_width/2.0+support_width, 0]) {
-                    cuboid([band_holder_thickness, support_width*2, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
-                    translate([band_holder_thickness/2.0-support_depth/2.0, -support_width+band_holder_thickness/2.0, 0]) 
-                        rotate([0,0,90])
-                            cuboid([band_holder_thickness, support_depth, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
-                    translate([band_holder_thickness/2.0-support_depth/2.0, support_width-band_holder_thickness/2.0, 0]) 
-                        rotate([0,0,90])
-                            cuboid([band_holder_thickness, support_depth, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                union() {
+                    // support - hook stop
+                    translate([-band_holder_thickness/2.0, base_width/2.0+band_holder_thickness/2.0, 0])
+                        cube([band_holder_thickness, band_holder_thickness, clamp_height], center=true);
+                    translate([-band_holder_thickness/2.0, base_width/2.0+support_width, 0]) {
+                        cuboid([band_holder_thickness, support_width*2, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                        translate([band_holder_thickness/2.0-support_depth/2.0, -support_width+band_holder_thickness/2.0, 0]) 
+                            rotate([0,0,90])
+                                cuboid([band_holder_thickness, support_depth, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                        translate([band_holder_thickness/2.0-support_depth/2.0, support_width-band_holder_thickness/2.0, 0]) 
+                            rotate([0,0,90])
+                                cuboid([band_holder_thickness, support_depth, clamp_height+4], rounding=1, edges = ["X", "Y", "Z"]);
+                    }
+                }
+                // indents for hooking hooks
+                difference() 
+                {
+                    translate([0, base_width/2.0+triangle_size*sin(60), 0])
+                        translate([triangle_size*sin(30)-fudge,0,0])
+                    cylinder(r=triangle_size, h=clamp_height, center=true, $fn=3);
+                    cutout_size = 10;
+                    color("white") {
+                        translate([((cutout_size)/2/sin(45)), base_width/2.0+triangle_size*sin(60), -clamp_height/2.0])
+                            rotate([0, 45, 0])
+                                cube([cutout_size, cutout_size, cutout_size], center=true);
+                        translate([((cutout_size)/2/sin(45)), base_width/2.0+triangle_size*sin(60), clamp_height/2.0])
+                            rotate([0, 45, 0])
+                                cube([cutout_size, cutout_size, cutout_size], center=true);
+                    }
                 }
             }
-            // indents for hooking hooks
-            difference() 
-            {
-                translate([0, base_width/2.0+triangle_size*sin(60), 0])
-                    translate([triangle_size*sin(30)-fudge,0,0])
-                cylinder(r=triangle_size, h=clamp_height, center=true, $fn=3);
-                cutout_size = 10;
-                color("white") {
-                    translate([((cutout_size)/2/sin(45)), base_width/2.0+triangle_size*sin(60), -clamp_height/2.0])
-                        rotate([0, 45, 0])
-                            cube([cutout_size, cutout_size, cutout_size], center=true);
-                    translate([((cutout_size)/2/sin(45)), base_width/2.0+triangle_size*sin(60), clamp_height/2.0])
-                        rotate([0, 45, 0])
-                            cube([cutout_size, cutout_size, cutout_size], center=true);
+                // triangle alignment hooks
+                translate([band_holder_thickness/2.0, base_width/2.0, 0])
+                rotate([0,0,90]) {
+                    translate([0, (-hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0), -(clamp_height/4.0-band_holder_thickness)])
+                        translate([bhs[1]*0.25, 0, 0]) rotate([0,0,90]) rotate([90,0,0])
+                            ymirror(copy=true)
+                                translate([0, bhs[1]/2.0, 0])
+                                    wedge([bhs[0], bhs[1], bhs[1]], anchor="BACK", center=true);
+                    translate([0, (-hook_stop_starting_depth+support_thickness/2.0+bhs[0]/2.0), clamp_height/4.0-band_holder_thickness])
+                        translate([bhs[1]*0.25, 0, 0]) rotate([0,0,90]) rotate([90,0,0])
+                            ymirror(copy=true)
+                                translate([0, bhs[1]/2.0, 0])
+                                    wedge([bhs[0], bhs[1], bhs[1]], anchor="BACK", center=true);                    
                 }
-            }
         }
 }
 
@@ -211,8 +302,10 @@ module reference_pen_holder() {
             color("purple")
                 pen_holder(fn=4, pen_diameter=sharpie_diameter, pen_grip_percent=0);// triagle
 }
+
 //band_holder();
-pen_clamp();
+band_holder_wrappable();
+//pen_clamp();
 //reference_pen_holder();
 //all_the_pens();
 
